@@ -1,0 +1,3 @@
+provider "minikube" {
+  kubernetes_version = "1.30.0"
+}

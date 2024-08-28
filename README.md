@@ -1,1 +1,1 @@
-# demo.terraform-module-minikube
+# terraform-module-minikube
