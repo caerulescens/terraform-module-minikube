@@ -11,7 +11,6 @@ variable "minikube_clusters" {
       binary_mirror              = optional(string)
       cache_images               = optional(bool)
       cert_expiration            = optional(number)
-      cluster_name               = optional(string)
       cni                        = optional(string)
       container_runtime          = optional(string)
       cpus                       = optional(number)

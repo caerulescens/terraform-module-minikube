@@ -23,7 +23,7 @@ module "minikube_cluster" {
   binary_mirror              = each.value.binary_mirror
   cache_images               = each.value.cache_images
   cert_expiration            = each.value.cert_expiration
-  cluster_name               = each.value.cluster_name
+  cluster_name               = each.key
   cni                        = each.value.cni
   container_runtime          = each.value.container_runtime
   cpus                       = each.value.cpus
