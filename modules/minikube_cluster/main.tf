@@ -8,9 +8,6 @@ terraform {
   }
 }
 
-# todo: 'auto_pause_interval' missing completions?
-# todo: 'gpus' missing completions?
-# todo: 'output' missing completion?
 resource "minikube_cluster" "default" {
   addons                     = var.addons
   apiserver_ips              = var.apiserver_ips

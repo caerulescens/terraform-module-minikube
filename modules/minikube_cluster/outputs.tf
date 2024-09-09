@@ -1,27 +1,27 @@
 output "client_certificate" {
   value       = minikube_cluster.default.client_certificate
-  description = "Cluster client certificate"
+  description = "Client certificate used in cluster"
   sensitive   = true
 }
 
 output "client_key" {
   value       = minikube_cluster.default.client_key
-  description = "Cluster client key"
+  description = "Client key for cluster"
   sensitive   = true
 }
 
 output "cluster_ca_certificate" {
   value       = minikube_cluster.default.cluster_ca_certificate
-  description = "Cluster certificate authority certificate"
+  description = "Certificate authority for cluster"
   sensitive   = true
 }
 
 output "host" {
   value       = minikube_cluster.default.host
-  description = "Cluster host"
+  description = "The host name for the cluster"
 }
 
 output "id" {
   value       = minikube_cluster.default.id
-  description = "Cluster resource ID"
+  description = "The ID of this resource"
 }
