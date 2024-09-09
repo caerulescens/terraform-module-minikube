@@ -1,0 +1,64 @@
+name: Terraform Init
+description: Run `terraform init` with optional caching
+
+inputs:
+  args:
+    description: Arguments for `terraform init`
+  terraform-version:
+    description: Desired semver compatible Terraform version
+    required: true
+  cache:
+    description: Enable caching terraform project files
+    default: 'true'
+
+outputs:
+  terraform-version:
+    description: The Terraform version setup
+    value: ${{ steps.version-terraform.outputs.terraform-version }}
+  cache-hit:
+    description: Whether an exact cache hit occurred
+    value: ${{ steps.cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Terraform
+      id: setup-terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+
+    - name: Get Version
+      id: version-terraform
+      run: printf 'terraform-version=%s\n' "$(terraform version -json | jq -r '.terraform_version')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - run: printf 'date=%s\n' "$(date -I)" >> $GITHUB_OUTPUT
+      id: get-date
+      if: inputs.cache == 'true'
+      shell: bash
+
+    - name: Configure Plugin Cache Directory
+      id: cache-config
+      if: inputs.cache == 'true'
+      run: |
+        echo 'plugin_cache_dir="~/.terraform.d/plugin-cache"' > ~/.terraformrc
+        mkdir -p ~/.terraform.d/plugin-cache
+      shell: bash
+
+    - uses: actions/cache@v4
+      name: Cache Terraform Plugins
+      id: cache-terraform
+      if: inputs.cache == 'true'
+      with:
+        path: |
+          ~/.terraform.d/plugin-cache
+        key: terraform-${{ steps.get-date.outputs.date }}-${{ runner.os }}-${{ hashFiles('.terraform.lock.hcl') }}
+        restore-keys: |
+          terraform-${{ steps.get-date.outputs.date }}-${{ runner.os }}-
+          terraform-${{ steps.get-date.outputs.date }}-
+
+    - name: Init Terraform
+      id: init-terraform
+      run: terraform init ${{ inputs.args }}
+      shell: bash

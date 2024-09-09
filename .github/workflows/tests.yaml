@@ -1,0 +1,101 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      project: ${{ steps.changes.outputs.project }}
+      src: ${{ steps.changes.outputs.src }}
+      tests: ${{ steps.changes.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            workflow: &workflow
+              - '.github/actions/**'
+              - '.github/workflows/tests.yaml'
+              - '.github/workflows/.tests-matrix.yaml'
+            project: &project
+              - *workflow
+              - '.terraform.lock.hcl'
+            src:
+              - *project
+              - '*.tf'
+            tests:
+              - *project
+              - '*.tf'
+              - 'tests/**'
+
+  validate:
+    name: Validate Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      terraform-version: ${{ steps.terraform-init.outputs.terraform-version }}
+    if: needs.changes.outputs.project == 'true'
+    needs:
+      - changes
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/terraform-init
+        id: terraform-init
+        with:
+          args: '-backend=false'
+          terraform-version: "latest"
+
+      - run: terraform validate
+
+  tests-matrix:
+    uses: ./.github/workflows/.tests-matrix.yaml
+    name: "${{ matrix.os.name }} (Terraform ${{ needs.validate.outputs.terraform-version }})"
+    if: '!failure()'
+    needs:
+      - changes
+      - validate
+    strategy:
+      matrix:
+        os:
+          - name: Ubuntu
+            image: ubuntu-latest
+          - name: macOS
+            image: macos-latest
+          - name: Windows
+            image: windows-latest
+      fail-fast: false
+    with:
+      runner: ${{ matrix.os.image }}
+      terraform-version: "latest"
+      tflint-version: "latest"
+      run-tflint: ${{ needs.changes.outputs.tests == 'true' }}
+      run-tftest: ${{ needs.changes.outputs.tests == 'true' }}
+    secrets: inherit
+
+  status:
+    name: Status
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - changes
+      - validate
+      - tests-matrix
+    steps:
+      - run: ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 'false' || 'true' }}
