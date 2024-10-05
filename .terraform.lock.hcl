@@ -3,7 +3,7 @@
 
 provider "registry.terraform.io/scott-the-programmer/minikube" {
   version     = "0.4.0"
-  constraints = ">= 0.3.10"
+  constraints = ">= 0.4.0"
   hashes = [
     "h1:503dXFnKCuOCDmW4dEOEpNB4Jq7SaCOtGcej3tT/C5U=",
     "zh:0e98165e545b462cbc7f4e3466211e11501110116d6267ffa4e1e101a5b639bd",
